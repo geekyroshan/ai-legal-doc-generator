@@ -23,14 +23,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return null;
+    }
+
+    return data;
+  };
+
   useEffect(() => {
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
         setUser({
           id: session.user.id,
           email: session.user.email,
+          full_name: profile?.full_name,
+          avatar_url: profile?.avatar_url,
+          bio: profile?.bio,
         });
       }
     });
@@ -38,12 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
         setUser({
           id: session.user.id,
           email: session.user.email,
+          full_name: profile?.full_name,
+          avatar_url: profile?.avatar_url,
+          bio: profile?.bio,
         });
       } else {
         setUser(null);

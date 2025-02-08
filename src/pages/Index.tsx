@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, FileText, Shield, Zap } from "lucide-react";
+import { ArrowRight, FileText, Shield, Zap, UserCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
@@ -30,6 +30,12 @@ const Index = () => {
                   <Button size="lg" className="bg-teal-600 hover:bg-teal-700">
                     Create Document
                     <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="lg" asChild>
+                    <Link to="/profile">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
                   </Button>
                   <Button variant="outline" size="lg" onClick={() => signOut()}>
                     Sign Out

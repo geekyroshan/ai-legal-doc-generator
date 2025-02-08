@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <div className="min-h-screen">
@@ -25,32 +25,19 @@ const Index = () => {
               Generate professional legal documents instantly using advanced AI. Perfect for businesses, freelancers, and individuals.
             </p>
             <div className="flex items-center justify-center gap-4 pt-4">
-              {user ? (
-                <>
-                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700">
-                    Create Document
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="lg" asChild>
-                    <Link to="/profile">
-                      <UserCircle className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="lg" onClick={() => signOut()}>
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700" asChild>
-                    <Link to="/auth">Get Started<ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
-                  <Button variant="outline" size="lg" asChild>
-                    <Link to="/auth">Sign In</Link>
-                  </Button>
-                </>
-              )}
+              <Button size="lg" className="bg-teal-600 hover:bg-teal-700">
+                Create Document
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/profile">
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  Profile
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" onClick={() => signOut()}>
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>

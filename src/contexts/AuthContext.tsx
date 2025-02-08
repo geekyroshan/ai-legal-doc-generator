@@ -39,7 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Check active session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -52,9 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           bio: profile?.bio,
         });
       }
+      setLoading(false);
     });
 
-    // Listen for changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -134,9 +133,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <AuthContext.Provider value={{ user, session, signIn, signUp, signOut }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

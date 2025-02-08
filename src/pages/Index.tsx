@@ -2,8 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, FileText, Shield, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const Index = () => {
+  const { user, signOut } = useAuth();
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -21,13 +25,26 @@ const Index = () => {
               Generate professional legal documents instantly using advanced AI. Perfect for businesses, freelancers, and individuals.
             </p>
             <div className="flex items-center justify-center gap-4 pt-4">
-              <Button size="lg" className="bg-teal-600 hover:bg-teal-700">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="lg">
-                View Templates
-              </Button>
+              {user ? (
+                <>
+                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700">
+                    Create Document
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="lg" onClick={() => signOut()}>
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700" asChild>
+                    <Link to="/auth">Get Started<ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                  <Button variant="outline" size="lg" asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

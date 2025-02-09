@@ -27,23 +27,33 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
-    await signIn(
-      formData.get("email") as string,
-      formData.get("password") as string
-    );
-    setLoading(false);
+    try {
+      await signIn(
+        formData.get("email") as string,
+        formData.get("password") as string
+      );
+    } catch (error) {
+      console.error("Sign in error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
-    await signUp(
-      formData.get("email") as string,
-      formData.get("password") as string,
-      formData.get("fullName") as string
-    );
-    setLoading(false);
+    try {
+      await signUp(
+        formData.get("email") as string,
+        formData.get("password") as string,
+        formData.get("fullName") as string
+      );
+    } catch (error) {
+      console.error("Sign up error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

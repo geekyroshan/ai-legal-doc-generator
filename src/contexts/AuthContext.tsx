@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
-      console.log("Profile data fetched:", data);
       return data;
     } catch (error) {
       console.error("Error in fetchProfile:", error);
@@ -45,27 +44,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const createProfile = async (userId: string, fullName: string) => {
+    try {
+      const { error } = await supabase.from("profiles").insert({
+        id: userId,
+        full_name: fullName,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error creating profile:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    console.log("AuthProvider mounted");
     let mounted = true;
 
-    // Set up initial session check
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial session check:", session);
         
         if (mounted) {
           setSession(session);
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
-            if (mounted) {
+            if (mounted && profile) {
               setUser({
                 id: session.user.id,
                 email: session.user.email,
-                full_name: profile?.full_name,
-                avatar_url: profile?.avatar_url,
-                bio: profile?.bio,
+                full_name: profile.full_name,
+                avatar_url: profile.avatar_url,
+                bio: profile.bio,
               });
             }
           }
@@ -81,22 +91,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth();
 
-    // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth state changed:", session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
         setSession(session);
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
-          if (mounted) {
+          if (mounted && profile) {
             setUser({
               id: session.user.id,
               email: session.user.email,
-              full_name: profile?.full_name,
-              avatar_url: profile?.avatar_url,
-              bio: profile?.bio,
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url,
+              bio: profile.bio,
             });
           }
         } else {
@@ -114,27 +120,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
       });
+      
       if (error) throw error;
-      toast({
-        title: "Success!",
-        description: "Please check your email to verify your account.",
-      });
-      navigate("/");
+      
+      if (data.user) {
+        await createProfile(data.user.id, fullName);
+        toast({
+          title: "Success!",
+          description: "Please check your email to verify your account.",
+        });
+        navigate("/");
+      }
     } catch (error: any) {
+      console.error("Sign up error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message,
       });
+      throw error;
     }
   };
 
@@ -147,11 +155,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       navigate("/");
     } catch (error: any) {
+      console.error("Sign in error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message,
       });
+      throw error;
     }
   };
 
@@ -166,6 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Error",
         description: error.message,
       });
+      throw error;
     }
   };
 

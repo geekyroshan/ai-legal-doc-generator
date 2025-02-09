@@ -39,7 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Set up initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("Initial session check:", session);
       setSession(session);
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
@@ -51,12 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           bio: profile?.bio,
         });
       }
-      setLoading(false);
+      setLoading(false); // Always set loading to false after initial check
     });
 
+    // Set up auth state change listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state changed:", session);
       setSession(session);
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
@@ -70,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null);
       }
-      setLoading(false);
+      setLoading(false); // Always set loading to false after state change
     });
 
     return () => subscription.unsubscribe();
@@ -134,7 +138,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
   }
 
   return (

@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Templates from "./pages/Templates";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useState } from "react";
 import { PrivateRoute } from "./components/PrivateRoute";
@@ -16,7 +17,7 @@ const App = () => {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 minute
+        staleTime: 60 * 1000,
         retry: 1,
       },
     },
@@ -44,6 +45,14 @@ const App = () => {
                 element={
                   <PrivateRoute>
                     <Profile />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/templates"
+                element={
+                  <PrivateRoute>
+                    <Templates />
                   </PrivateRoute>
                 }
               />

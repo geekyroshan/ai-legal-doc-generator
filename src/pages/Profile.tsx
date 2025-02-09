@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState(user?.full_name || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.full_name || "");
+      setBio(user.bio || "");
+      setAvatarUrl(user.avatar_url || "");
+    }
+  }, [user]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     navigate("/auth");
@@ -44,6 +60,7 @@ const Profile = () => {
         description: "Profile updated successfully",
       });
     } catch (error: any) {
+      console.error("Error updating profile:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -76,7 +93,7 @@ const Profile = () => {
             <label htmlFor="email" className="text-sm font-medium">
               Email
             </label>
-            <Input id="email" value={user.email} disabled />
+            <Input id="email" value={user.email || ""} disabled />
           </div>
 
           <div className="space-y-2">

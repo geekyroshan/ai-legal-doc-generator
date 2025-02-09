@@ -12,6 +12,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,60 +25,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+
+      console.log("Profile data fetched:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in fetchProfile:", error);
       return null;
     }
-
-    return data;
   };
 
   useEffect(() => {
+    console.log("AuthProvider mounted");
+    let mounted = true;
+
     // Set up initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      setSession(session);
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser({
-          id: session.user.id,
-          email: session.user.email,
-          full_name: profile?.full_name,
-          avatar_url: profile?.avatar_url,
-          bio: profile?.bio,
-        });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initial session check:", session);
+        
+        if (mounted) {
+          setSession(session);
+          if (session?.user) {
+            const profile = await fetchProfile(session.user.id);
+            if (mounted) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email,
+                full_name: profile?.full_name,
+                avatar_url: profile?.avatar_url,
+                bio: profile?.bio,
+              });
+            }
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error in initializeAuth:", error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false); // Always set loading to false after initial check
-    });
+    };
+
+    initializeAuth();
 
     // Set up auth state change listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state changed:", session);
-      setSession(session);
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser({
-          id: session.user.id,
-          email: session.user.email,
-          full_name: profile?.full_name,
-          avatar_url: profile?.avatar_url,
-          bio: profile?.bio,
-        });
-      } else {
-        setUser(null);
+      if (mounted) {
+        setSession(session);
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          if (mounted) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email,
+              full_name: profile?.full_name,
+              avatar_url: profile?.avatar_url,
+              bio: profile?.bio,
+            });
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
       }
-      setLoading(false); // Always set loading to false after state change
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
@@ -137,16 +169,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   );

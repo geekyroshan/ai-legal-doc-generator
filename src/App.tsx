@@ -10,10 +10,10 @@ import Profile from "./pages/Profile";
 import Navbar from "@/components/Navbar";
 import Templates from "./pages/Templates";
 import CreateDocument from "./pages/CreateDocument";
+import Editor from "./pages/Editor"; // Import Editor Page
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useState } from "react";
 import { PrivateRoute } from "./components/PrivateRoute";
-import { ThemeProvider } from "next-themes"; // Import ThemeProvider
 
 const AppContent = () => {
   const { loading } = useAuth();
@@ -29,7 +29,7 @@ const AppContent = () => {
 
   return (
     <>
-      <Navbar /> {/* Ensure Navbar is here to always be available */}
+      <Navbar />
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route
@@ -57,7 +57,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/templates/:templateId/create"
+          path="/create-document/:templateId"
           element={
             <PrivateRoute>
               <CreateDocument />
@@ -65,10 +65,10 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/create-document/:templateId"
+          path="/editor/:documentId"
           element={
             <PrivateRoute>
-              <CreateDocument />
+              <Editor />
             </PrivateRoute>
           }
         />
@@ -92,19 +92,17 @@ const App = () => {
   );
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system"> {/* ThemeProvider added */}
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <AppContent />
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

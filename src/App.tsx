@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,19 +8,66 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Templates from "./pages/Templates";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useState } from "react";
 import { PrivateRoute } from "./components/PrivateRoute";
 
+const AppContent = () => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    console.log("App is still initializing, showing loader...");
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route
+        path="/"
+        element={
+          <PrivateRoute>
+            <Index />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/templates"
+        element={
+          <PrivateRoute>
+            <Templates />
+          </PrivateRoute>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-        retry: 1,
-      },
-    },
-  }));
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000,
+            retry: 1,
+          },
+        },
+      })
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -30,34 +76,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Index />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <Profile />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/templates"
-                element={
-                  <PrivateRoute>
-                    <Templates />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppContent />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

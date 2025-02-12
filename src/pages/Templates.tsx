@@ -1,26 +1,35 @@
-
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { Plus, FileText, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { FileText, Loader2, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-type Template = Database['public']['Tables']['templates']['Row'];
+interface Template {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  created_at: string;
+  created_by: string;
+  is_public: boolean;
+}
 
 const Templates = () => {
   const { toast } = useToast();
-  const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
+  // Fetch templates from Supabase
   const { data: templates, isLoading } = useQuery({
     queryKey: ['templates'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('templates')
         .select('*')
+        .eq('is_public', true)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -36,69 +45,84 @@ const Templates = () => {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const categories = [
+    { id: "all", name: "All Templates" },
+    { id: "nda", name: "NDAs" },
+    { id: "rental", name: "Rental Agreements" },
+    { id: "will", name: "Wills" },
+    { id: "business", name: "Business Contracts" },
+  ];
+
+  const handleTemplateSelect = (templateId: string) => {
+    navigate(`/create-document/${templateId}`);
+  };
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container-tight">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Document Templates</h1>
-          <Button onClick={() => setIsCreating(true)} className="bg-teal-600 hover:bg-teal-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Template
-          </Button>
-        </div>
+    <div className="container py-8">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+      </div>
 
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Document Templates</h1>
+        <p className="text-gray-600">
+          Choose a template to create your legal document
+        </p>
+      </div>
+
+      {/* Categories */}
+      <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+        {categories.map((category) => (
+          <Button
+            key={category.id}
+            variant={selectedCategory === category.id ? "default" : "outline"}
+            onClick={() => setSelectedCategory(category.id)}
+            className="whitespace-nowrap"
+          >
+            {category.name}
+          </Button>
+        ))}
+      </div>
+
+      {/* Templates Grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        </div>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates?.map((template) => (
-            <Card key={template.id} className="p-6 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-lg">{template.title}</h3>
-                  {template.description && (
-                    <p className="text-sm text-gray-500">{template.description}</p>
-                  )}
+            <Card 
+              key={template.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleTemplateSelect(template.id)}
+            >
+              <CardHeader>
+                <div className="h-12 w-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                  <FileText className="h-6 w-6 text-teal-600" />
                 </div>
-                <FileText className="h-5 w-5 text-gray-400" />
-              </div>
-              
-              <div className="pt-4 flex items-center justify-between border-t">
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button size="sm" asChild>
-                  <Link to={`/documents/new?template=${template.id}`}>
-                    Use Template
-                  </Link>
+                <CardTitle>{template.title}</CardTitle>
+                <CardDescription>{template.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">
+                  Use Template
                 </Button>
-              </div>
+              </CardContent>
             </Card>
           ))}
-
-          {templates?.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <FileText className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-semibold">No templates yet</h3>
-              <p className="mt-2 text-gray-500">Create your first document template to get started.</p>
-            </div>
-          )}
         </div>
-      </div>
+      )}
+
+      {templates?.length === 0 && !isLoading && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No templates found</p>
+        </div>
+      )}
     </div>
   );
 };

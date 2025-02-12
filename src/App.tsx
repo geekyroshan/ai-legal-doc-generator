@@ -7,10 +7,13 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Navbar from "@/components/Navbar";
 import Templates from "./pages/Templates";
+import CreateDocument from "./pages/CreateDocument";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useState } from "react";
 import { PrivateRoute } from "./components/PrivateRoute";
+import { ThemeProvider } from "next-themes"; // Import ThemeProvider
 
 const AppContent = () => {
   const { loading } = useAuth();
@@ -25,34 +28,53 @@ const AppContent = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/auth" element={<Auth />} />
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            <Index />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <PrivateRoute>
-            <Profile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/templates"
-        element={
-          <PrivateRoute>
-            <Templates />
-          </PrivateRoute>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <Navbar /> {/* Ensure Navbar is here to always be available */}
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Index />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/templates"
+          element={
+            <PrivateRoute>
+              <Templates />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/templates/:templateId/create"
+          element={
+            <PrivateRoute>
+              <CreateDocument />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/create-document/:templateId"
+          element={
+            <PrivateRoute>
+              <CreateDocument />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 
@@ -70,17 +92,19 @@ const App = () => {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="system"> {/* ThemeProvider added */}
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

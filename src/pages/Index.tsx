@@ -1,13 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, FileText, Shield, Zap, UserCircle } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { ArrowRight, FileText, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const { signOut } = useAuth();
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -30,15 +26,6 @@ const Index = () => {
                   Create Document
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/profile">
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  Profile
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" onClick={() => signOut()}>
-                Sign Out
               </Button>
             </div>
           </div>

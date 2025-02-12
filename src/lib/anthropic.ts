@@ -6,20 +6,10 @@ const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true
 });
 
-// Define expected structure for API response
-interface AnthropicMessage {
-  role: string;
-  content: string;
-}
-
-interface AnthropicResponse {
-  messages: AnthropicMessage[];
-}
-
 export async function generateDocument(template: any, formData: Record<string, string>) {
   console.log('Starting document generation...');
   try {
-    const response: any = await Promise.race([
+    const response = await Promise.race([
       anthropic.messages.create({
         model: 'claude-3-opus-20240229',
         max_tokens: 4096,
@@ -38,13 +28,7 @@ export async function generateDocument(template: any, formData: Record<string, s
     ]);
 
     console.log('API Response received:', response);
-
-    // Ensure response follows expected structure
-    if (!response || !Array.isArray(response.messages) || response.messages.length === 0) {
-      throw new Error('Invalid response structure from Anthropic API');
-    }
-
-    return response.messages[0].content;  // Access safely
+    return response.content[0].text;
   } catch (error) {
     console.error('Error in generateDocument:', error);
     throw error;

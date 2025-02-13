@@ -1,28 +1,21 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import ModeToggle from "@/components/ui/mode-toggle"; // Dark mode toggle button
-import { Menu, X, UserCircle } from "lucide-react";
+import ModeToggle from "@/components/ui/mode-toggle";
 import { useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ChevronDown, LogOut, File, PlusCircle, User, LayoutDashboard } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-/*************  ✨ Codeium Command ⭐  *************/
-/**
- * The navigation bar component.
- *
- * This component renders the navigation bar with links to the
- * dashboard, profile, templates, and create template pages. It also
- * includes a dark mode toggle and a sign out button.
- *
- * @returns The navigation bar element.
- */
-/******  d656f2fe-fc0f-4197-8553-d1a490e813b6  *******/  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // Hide navbar on /auth route
-  if (location.pathname === "/auth") return null;
 
   const handleSignOut = async () => {
     await signOut();
@@ -37,53 +30,64 @@ const Navbar = () => {
           AI-Legal Docs
         </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          {/* Profile Box */}
-          <Link to="/profile" className="relative flex items-center gap-2 px-4 py-2 border rounded-lg shadow-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
-            <UserCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-            <span className="text-gray-800 dark:text-gray-200 font-medium">
-              Profile
-            </span>
-          </Link>
-
-           <Link to="/dashboard" className="text-gray-800 dark:text-gray-200 hover:text-teal-600">
-           Dashboard
-           </Link>
-
-          {/* Sign Out Button */}
-          <Button onClick={handleSignOut} variant="outline">
-            Sign Out
-          </Button>
-
+        {/* Right Section */}
+        <div className="flex items-center gap-4">
           {/* Dark Mode Toggle */}
           <ModeToggle />
-        </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden text-gray-800 dark:text-gray-200"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile Dropdown Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 shadow-md px-4 py-3 space-y-3">
-          <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
-            <UserCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-            <span className="text-gray-800 dark:text-gray-200">Profile</span>
-          </Link>
-          <Button onClick={handleSignOut} className="w-full">
-            Sign Out
+          {/* My Documents Button */}
+          <Button 
+            onClick={() => navigate("/dashboard")} 
+            className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg"
+          >
+            My Documents
           </Button>
-          <div className="flex justify-center">
-            <ModeToggle />
-          </div>
+
+          {/* Dashboard Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg"
+              >
+                <LayoutDashboard className="h-5 w-5" />
+                My Dashboard
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-48 shadow-lg rounded-lg bg-white dark:bg-gray-800">
+              <DropdownMenuItem onClick={() => navigate("/profile")} className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md">
+                <User className="h-5 w-5 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/templates")} className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md">
+                <File className="h-5 w-5 mr-2" />
+                Templates
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/create-template")} className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md">
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Create Template
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="text-red-600 hover:bg-red-100 dark:hover:bg-red-700 p-2 rounded-md">
+                <LogOut className="h-5 w-5 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* User Avatar */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="cursor-pointer border border-gray-300 dark:border-gray-700">
+                <AvatarFallback className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white">
+                  {user?.name ? user.name[0].toUpperCase() : "U"}
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+          </DropdownMenu>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

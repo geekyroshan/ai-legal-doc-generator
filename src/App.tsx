@@ -9,8 +9,10 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Navbar from "@/components/Navbar";
 import Templates from "./pages/Templates";
+import CreateTemplate from "./pages/CreateTemplate";
 import CreateDocument from "./pages/CreateDocument";
 import Editor from "./pages/Editor"; // Import Editor Page
+import Dashboard from "./pages/Dashboard";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useState } from "react";
 import { PrivateRoute } from "./components/PrivateRoute";
@@ -56,6 +58,15 @@ const AppContent = () => {
             </PrivateRoute>
           }
         />
+      <Route
+        path="/create-template"
+         element={
+         <PrivateRoute>
+          <CreateTemplate />
+       </PrivateRoute>
+  }
+/>
+
         <Route
           path="/create-document/:templateId"
           element={
@@ -69,6 +80,15 @@ const AppContent = () => {
           element={
             <PrivateRoute>
               <Editor />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
             </PrivateRoute>
           }
         />

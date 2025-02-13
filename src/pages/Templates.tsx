@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FileText, Loader2, ArrowLeft } from "lucide-react";
+import { FileText, Loader2, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Template {
@@ -59,19 +59,16 @@ const Templates = () => {
 
   return (
     <div className="container py-8">
-      {/* Back Button */}
-      <div className="mb-6">
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-      </div>
-
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Document Templates</h1>
-        <p className="text-gray-600">
-          Choose a template to create your legal document
-        </p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Document Templates</h1>
+          <p className="text-gray-600">Choose a template or create a new one.</p>
+        </div>
+        <Button onClick={() => navigate('/create-template')} className="flex items-center bg-teal-600 hover:bg-teal-700">
+          <PlusCircle className="mr-2" />
+          Create Template
+        </Button>
       </div>
 
       {/* Categories */}
@@ -89,38 +86,32 @@ const Templates = () => {
       </div>
 
       {/* Templates Grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates?.map((template) => (
-            <Card 
-              key={template.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handleTemplateSelect(template.id)}
-            >
-              <CardHeader>
-                <div className="h-12 w-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                  <FileText className="h-6 w-6 text-teal-600" />
-                </div>
-                <CardTitle>{template.title}</CardTitle>
-                <CardDescription>{template.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">
-                  Use Template
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {templates?.map((template) => (
+          <Card 
+            key={template.id}
+            className="cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleTemplateSelect(template.id)}
+          >
+            <CardHeader>
+              <div className="h-12 w-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-teal-600" />
+              </div>
+              <CardTitle>{template.title}</CardTitle>
+              <CardDescription>{template.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full">
+                Use Template
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {templates?.length === 0 && !isLoading && (
+      {isLoading && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No templates found</p>
+          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
         </div>
       )}
     </div>

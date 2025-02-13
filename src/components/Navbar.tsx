@@ -7,7 +7,17 @@ import { useState } from "react";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * The navigation bar component.
+ *
+ * This component renders the navigation bar with links to the
+ * dashboard, profile, templates, and create template pages. It also
+ * includes a dark mode toggle and a sign out button.
+ *
+ * @returns The navigation bar element.
+ */
+/******  d656f2fe-fc0f-4197-8553-d1a490e813b6  *******/  const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -36,6 +46,10 @@ const Navbar = () => {
               Profile
             </span>
           </Link>
+
+           <Link to="/dashboard" className="text-gray-800 dark:text-gray-200 hover:text-teal-600">
+           Dashboard
+           </Link>
 
           {/* Sign Out Button */}
           <Button onClick={handleSignOut} variant="outline">

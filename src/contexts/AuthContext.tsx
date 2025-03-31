@@ -1,13 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthUser } from "@/types/auth";
 import { useToast } from "@/components/ui/use-toast";
 
 type AuthContextType = {
   user: AuthUser | null;
   session: Session | null;
+  sessionChecked: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -20,203 +21,156 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Fetch profile from Supabase
+  // ✅ Fetch user profile from Supabase
   const fetchProfile = async (userId: string) => {
-    console.log("Attempting to fetch profile for user ID:", userId);
-  
-    const fetchTimeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Profile fetch timed out!")), 2000)
-    );
-  
     try {
-      const fetchProfilePromise = supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
-  
-        const result = await Promise.race([fetchProfilePromise, fetchTimeout]);
 
-      const { data, error } = result as { data: any; error: any };
-  
       if (error) {
-        console.error("Error fetching profile from Supabase:", error);
+        console.error("Error fetching profile:", error);
         return null;
       }
-  
-      if (!data) {
-        console.warn("Profile fetch returned no data.");
-        return null;
-      }
-  
-      console.log("Profile data retrieved:", data);
+
       return data;
     } catch (error) {
       console.error("Unexpected error in fetchProfile:", error);
       return null;
     }
   };
-  
 
-  // Create a new profile in Supabase
-  const createProfile = async (userId: string, fullName: string) => {
-    try {
-      const { error } = await supabase.from("profiles").insert({
-        id: userId,
-        full_name: fullName,
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error("Error creating profile:", error);
-      throw error;
-    }
-  };
-
-  // Initialize authentication state
+  // ✅ Initialize authentication state & Fix Login Flash Issue
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log("Attempting to retrieve session from Supabase...");
-    
+      console.log("Initializing authentication...");
+
       try {
         const { data, error } = await supabase.auth.getSession();
-    
+
         if (error) {
           console.error("Error retrieving session:", error);
           setLoading(false);
+          setSessionChecked(true);
           return;
         }
-    
-        if (!data.session) {
-          console.warn("No session found on refresh. User might be logged out.");
+
+        if (!data?.session) {
+          console.warn("No session found.");
           setUser(null);
           setLoading(false);
+          setSessionChecked(true);
           return;
         }
-    
-        console.log("Session successfully retrieved on refresh:", data.session);
+
+        console.log("Session retrieved:", data.session);
         setSession(data.session);
-    
-        // Render the app immediately after session is restored
+
+        // ✅ Fetch and set user profile
+        const profile = await fetchProfile(data.session.user.id);
         setUser({
           id: data.session.user.id,
           email: data.session.user.email ?? "",
-          full_name: "Loading...",  // Placeholder while fetching profile
-          avatar_url: "",
-          bio: "",
+          full_name: profile?.full_name ?? "Unnamed",
+          avatar_url: profile?.avatar_url ?? "",
+          bio: profile?.bio ?? "",
         });
-    
-        // Fetch the profile in the background
-        fetchProfile(data.session.user.id).then((profile) => {
-          if (profile) {
-            setUser((prevUser) => ({
-              ...prevUser,
-              full_name: profile.full_name ?? "Unnamed",
-              avatar_url: profile.avatar_url ?? "",
-              bio: profile.bio ?? "",
-            }));
-          }
-        });
+
+        console.log("User profile set:", profile);
       } catch (error) {
         console.error("Error during session initialization:", error);
       } finally {
-        setLoading(false);  // Ensure loading stops immediately after session check
+        setLoading(false);
+        setSessionChecked(true);
       }
     };
-    
-  
+
     initializeAuth();
-    
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+
+    // ✅ Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log("Auth state changed:", session);
       setSession(session);
-  
       if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        if (profile) {
+        fetchProfile(session.user.id).then((profile) => {
           setUser({
             id: session.user.id,
             email: session.user.email ?? "",
-            full_name: profile.full_name ?? "Unnamed",
-            avatar_url: profile.avatar_url ?? "",
-            bio: profile.bio ?? "",
+            full_name: profile?.full_name ?? "Unnamed",
+            avatar_url: profile?.avatar_url ?? "",
+            bio: profile?.bio ?? "",
           });
-        } else {
-          setUser({
-            id: session.user.id,
-            email: session.user.email ?? "",
-            full_name: "Unnamed",
-            avatar_url: "",
-            bio: "",
-          });
-        }
+        });
       } else {
         setUser(null);
       }
-  
-      setLoading(false);  // Ensure loading is stopped after auth change
+      setLoading(false);
+      setSessionChecked(true);
     });
-  
+
     return () => {
-      subscription.unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, []);
-  
-  // Sign up a new user
+
+  // ✅ Sign up new user
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: { name: fullName }, // ✅ Store full name in metadata
+        },
       });
 
       if (error) throw error;
 
       if (data.user) {
-        await createProfile(data.user.id, fullName);
         toast({
           title: "Success!",
-          description: "Please check your email to verify your account.",
+          description: "Check your email to verify your account.",
         });
         navigate("/");
       }
     } catch (error: any) {
-      console.error("Sign up error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message,
       });
-      throw error;
     }
   };
 
-  // Sign in an existing user
+  // ✅ Sign in existing user
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
       if (error) throw error;
-      navigate("/");
+
+      // ✅ Redirect user back to where they were before login
+      navigate(location.pathname !== "/auth" ? location.pathname : "/dashboard");
     } catch (error: any) {
-      console.error("Sign in error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message,
       });
-      throw error;
     }
   };
 
-  // Sign out the user
+  // ✅ Sign out user
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -228,18 +182,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Error",
         description: error.message,
       });
-      throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ user, session, sessionChecked, signIn, signUp, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

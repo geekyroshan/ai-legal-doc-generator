@@ -2,10 +2,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useLocation } from "react-router-dom";
 
 export const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, sessionChecked } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || !sessionChecked) {
     console.log("App is still initializing, showing loader...");
     return (
       <div className="flex items-center justify-center min-h-screen">

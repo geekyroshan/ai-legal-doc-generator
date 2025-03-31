@@ -18,9 +18,9 @@ import { useState } from "react";
 import { PrivateRoute } from "./components/PrivateRoute";
 
 const AppContent = () => {
-  const { loading } = useAuth();
+  const { loading, sessionChecked } = useAuth();
 
-  if (loading) {
+  if (loading || !sessionChecked) {
     console.log("App is still initializing, showing loader...");
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -34,14 +34,7 @@ const AppContent = () => {
       <Navbar />
       <Routes>
         <Route path="/auth" element={<Auth />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Index />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
         <Route
           path="/profile"
           element={

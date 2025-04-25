@@ -169,7 +169,7 @@ const CreateDocument = () => {
               <Input id={field.id} type={field.type} placeholder={field.placeholder} required={field.required} value={formData[field.id] || ''} onChange={(e) => handleInputChange(field.id, e.target.value)} />
             </div>
           ))}
-
+//This is the submit button
           <Button type="submit" disabled={isGenerating}>{isGenerating ? 'Generating...' : 'Generate Document'}</Button>
         </form>
       </Card>
